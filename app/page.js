@@ -55,16 +55,13 @@ export default function GameTracker() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           endpoint: 'games',
-          // Arama motoru düzelttildi (sort kaldırıldı, çünkü search ile çakışıyor)
-          body: `search "${q}"; fields name,cover.url; limit 30;`,
+          body: `search "${q}"; fields name,cover.url; limit 20;`,
         }),
       });
       const data = await res.json();
-      // Sadece kapağı olanları göster ve client tarafında ilk 12'yi al
       const filtered = (Array.isArray(data) ? data : []).filter(g => g.cover && g.cover.url);
-      setResults(filtered.slice(0, 12));
+      setResults(filtered);
     } catch (err) {
-      console.error("Arama hatası:", err);
       setResults([]);
     } finally {
       setSearching(false);
@@ -106,16 +103,13 @@ export default function GameTracker() {
         useCORS: true,
         scale: 2,
         logging: false,
-        // Ekranda görünmeyen alanları da dahil et
-        windowWidth: rosterRef.current.scrollWidth,
-        windowHeight: rosterRef.current.scrollHeight,
       });
 
       canvas.toBlob(async (blob) => {
         if (!blob) return;
         const file = new File([blob], '2026-takvimi.png', { type: 'image/png' });
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({ files: [file], title: 'Müdavim 2026 Oyun Takvimi' });
+          await navigator.share({ files: [file], title: '2026 Oyun Takvimi' });
         } else {
           const link = document.createElement('a');
           link.href = URL.createObjectURL(blob);
@@ -137,14 +131,18 @@ export default function GameTracker() {
           background: #0e0e12; 
           color: #e8e6f0; 
           font-family: 'Outfit', sans-serif;
-          overflow-x: hidden;
+          overflow: hidden; /* Masaüstünde scroll'u tamamen kapat */
+        }
+
+        @media (max-width: 1024px) {
+          body { overflow: auto; }
         }
 
         .page { 
-          max-width: 1500px; 
+          max-width: 1600px; 
           margin: 0 auto; 
-          padding: 15px 25px; 
-          height: 100vh; /* Ekrana sabitle */
+          padding: 10px 20px; 
+          height: 100vh;
           display: flex;
           flex-direction: column;
         }
@@ -153,13 +151,13 @@ export default function GameTracker() {
           display: flex; 
           justify-content: space-between; 
           align-items: center;
-          margin-bottom: 15px;
+          padding: 5px 0;
           flex-shrink: 0;
         }
 
         .site-title {
           font-family: 'Bebas Neue', sans-serif;
-          font-size: clamp(2rem, 5vw, 3rem);
+          font-size: clamp(1.8rem, 4vw, 2.5rem);
           background: linear-gradient(135deg, #c9b8ff 0%, #ff8fc8 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
@@ -169,26 +167,25 @@ export default function GameTracker() {
           background: #2a2835;
           color: #c9b8ff; 
           border: 1px solid #3d3a50;
-          padding: 10px 20px; 
-          border-radius: 12px; 
+          padding: 8px 16px; 
+          border-radius: 10px; 
           cursor: pointer;
+          font-size: 0.85rem;
           font-weight: 600; 
-          transition: 0.2s;
         }
-        .share-btn:hover { background: #c9b8ff; color: #000; }
 
-        /* Grid Sistemi Düzenlendi */
         .grid-months {
           display: grid; 
           grid-template-columns: repeat(4, 1fr); 
-          gap: 12px;
-          flex: 1; /* Kalan boşluğu doldur */
-          min-height: 0; /* Overflow engelleme */
+          gap: 10px;
+          flex: 1;
+          min-height: 0;
+          padding-bottom: 10px;
         }
 
         @media (max-width: 1024px) { 
-          .grid-months { grid-template-columns: repeat(3, 1fr); flex: initial; height: auto; }
-          .page { height: auto; }
+          .grid-months { grid-template-columns: repeat(3, 1fr); flex: none; height: auto; }
+          .page { height: auto; overflow: visible; }
         }
         @media (max-width: 768px) { .grid-months { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 480px) { .grid-months { grid-template-columns: 1fr; } }
@@ -196,76 +193,92 @@ export default function GameTracker() {
         .month-col {
           background: #16141f; 
           border: 1px solid #2a2835; 
-          border-radius: 14px;
-          padding: 12px; 
+          border-radius: 12px;
+          padding: 10px; 
           display: flex; 
           flex-direction: column;
+          overflow: hidden;
         }
 
         .month-label {
           font-family: 'Bebas Neue', sans-serif; 
-          font-size: 1.4rem;
+          font-size: 1.2rem;
           color: #c9b8ff; 
-          margin-bottom: 10px; 
-          letter-spacing: 1px;
+          margin-bottom: 8px; 
           border-bottom: 1px solid #2a2835;
-          padding-bottom: 5px;
+          padding-bottom: 4px;
         }
 
         .games-grid {
           display: grid; 
-          grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)); 
-          gap: 8px;
+          grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); 
+          gap: 6px;
+          overflow-y: auto; /* Kutu içi dolarsa sadece kutu içinde scroll olsun */
         }
 
         .game-card {
           position: relative; 
           aspect-ratio: 3/4; 
-          border-radius: 6px;
+          border-radius: 4px;
           overflow: hidden; 
           background: #0e0e12;
-          box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
         .game-card img { width: 100%; height: 100%; object-fit: cover; }
 
         .remove-btn {
-          position: absolute; top: 3px; right: 3px; width: 20px; height: 20px;
+          position: absolute; top: 2px; right: 2px; width: 18px; height: 18px;
           background: #ff4d6d; border: none; border-radius: 50%;
-          color: white; font-size: 11px; cursor: pointer; opacity: 0;
+          color: white; font-size: 10px; cursor: pointer; opacity: 0;
           display: flex; align-items: center; justify-content: center;
-          transition: opacity 0.2s; z-index: 2;
+          z-index: 2;
         }
         .game-card:hover .remove-btn { opacity: 1; }
 
         .add-btn {
           aspect-ratio: 3/4; 
-          border: 2px dashed #2a2835; 
-          border-radius: 6px;
+          border: 1.5px dashed #2a2835; 
+          border-radius: 4px;
           background: transparent; 
           color: #3d3a50; 
-          font-size: 1.8rem;
+          font-size: 1.5rem;
           cursor: pointer; 
-          display: flex; 
-          align-items: center; 
-          justify-content: center;
-          transition: 0.2s;
+          display: flex; align-items: center; justify-content: center;
         }
-        .add-btn:hover { border-color: #c9b8ff; color: #c9b8ff; background: rgba(201, 184, 255, 0.03); }
+        .add-btn:hover { border-color: #c9b8ff; color: #c9b8ff; }
 
+        /* MODAL VE ARAMA FIX */
         .modal-backdrop {
           position: fixed; inset: 0; background: rgba(0,0,0,0.9);
           display: flex; align-items: center; justify-content: center; z-index: 100;
-          backdrop-filter: blur(5px);
         }
         .modal {
-          background: #16141f; width: 95%; max-width: 500px;
-          border-radius: 20px; border: 1px solid #2a2835;
-          max-height: 80vh; display: flex; flex-direction: column;
+          background: #16141f; width: 95%; max-width: 600px;
+          border-radius: 16px; border: 1px solid #2a2835;
+          max-height: 85vh; display: flex; flex-direction: column;
+        }
+        .search-results-grid {
+          display: grid; 
+          grid-template-columns: repeat(3, 1fr); 
+          gap: 15px; 
+          padding: 20px;
+          overflow-y: auto;
+        }
+        .search-item {
+          cursor: pointer;
+          display: flex;
+          flex-direction: column;
+          gap: 5px;
+        }
+        .search-item-img {
+          width: 100%;
+          aspect-ratio: 3/4; /* Tüm arama sonuçlarını aynı boyuta zorla */
+          object-fit: cover;
+          border-radius: 8px;
+          background: #0e0e12;
         }
         .search-input {
           width: 100%; background: #0e0e12; border: 1px solid #2a2835;
-          padding: 14px; color: white; border-radius: 10px; outline: none;
-          font-size: 1rem;
+          padding: 15px; color: white; border-radius: 10px; outline: none;
         }
       `}</style>
 
@@ -273,7 +286,7 @@ export default function GameTracker() {
         <header className="header">
           <h1 className="site-title">2026 OYUN TAKİBİ</h1>
           <button className="share-btn" onClick={handleShareImage}>
-            🖼️ Görsel Olarak Paylaş
+            🖼️ Görsel Paylaş
           </button>
         </header>
 
@@ -285,7 +298,6 @@ export default function GameTracker() {
                 {(monthGames[mi] || []).map((game) => (
                   <div key={game.id} className="game-card">
                     <img src={game.coverUrl} alt={game.name} crossOrigin="anonymous" />
-                    {/* Paylaşırken görünmemesi için ignore eklendi */}
                     <button 
                       className="remove-btn" 
                       data-html2canvas-ignore="true"
@@ -293,7 +305,6 @@ export default function GameTracker() {
                     >✕</button>
                   </div>
                 ))}
-                {/* Paylaşırken görünmemesi için ignore eklendi */}
                 <button
                   className="add-btn"
                   data-html2canvas-ignore="true"
@@ -315,24 +326,25 @@ export default function GameTracker() {
                 {MONTHS[modal.monthIndex].charAt(0) + MONTHS[modal.monthIndex].slice(1).toLowerCase()} ayına oyun ekle:
               </span>
             </div>
-            <div style={{ padding: '0 20px 15px' }}>
-              <input className="search-input" placeholder="Oyun ara..." value={query} onChange={handleQueryChange} autoFocus />
+            <div style={{ padding: '0 20px 10px' }}>
+              <input className="search-input" placeholder="Oyun ismi yazın..." value={query} onChange={handleQueryChange} autoFocus />
             </div>
-            <div style={{ flex: 1, overflowY: 'auto', padding: '0 20px 20px' }}>
-              {searching ? <div style={{ textAlign: 'center', color: '#c9b8ff' }}>Aranıyor...</div> : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
-                  {results.map((game) => {
-                    const url = game.cover?.url?.replace('t_thumb', 't_cover_big').replace(/^\/\//, 'https://');
-                    return (
-                      <div key={game.id} onClick={() => addGame({ id: game.id, name: game.name, coverUrl: url })} style={{ cursor: 'pointer' }}>
-                        <div className="game-card" style={{ marginBottom: '5px' }}>
-                           <img src={url} style={{ width: '100%', display: 'block' }} />
-                        </div>
-                        <div style={{ fontSize: '10px', textAlign: 'center', color: '#b8b4cc', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{game.name}</div>
+            <div className="search-results-grid">
+              {searching ? <div style={{ gridColumn: 'span 3', textAlign: 'center', color: '#c9b8ff' }}>Aranıyor...</div> : (
+                results.map((game) => {
+                  const url = game.cover?.url?.replace('t_thumb', 't_cover_big').replace(/^\/\//, 'https://');
+                  return (
+                    <div key={game.id} className="search-item" onClick={() => addGame({ id: game.id, name: game.name, coverUrl: url })}>
+                      <img src={url} className="search-item-img" alt={game.name} />
+                      <div style={{ fontSize: '11px', textAlign: 'center', color: '#b8b4cc', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {game.name}
                       </div>
-                    );
-                  })}
-                </div>
+                    </div>
+                  );
+                })
+              )}
+              {!searching && query && results.length === 0 && (
+                <div style={{ gridColumn: 'span 3', textAlign: 'center', color: '#6b6880' }}>Oyun bulunamadı.</div>
               )}
             </div>
           </div>
