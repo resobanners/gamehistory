@@ -67,6 +67,7 @@ export default function GameTracker() {
   const handleShareImage = async () => {
     if (!rosterRef.current) return;
     setIsExporting(true);
+    // Render bekletme
     await new Promise(r => setTimeout(r, 800));
     try {
       const html2canvas = (await import('html2canvas')).default;
@@ -79,7 +80,8 @@ export default function GameTracker() {
 
       canvas.toBlob(async (blob) => {
         if (!blob) return;
-        const file = new File([blob], '2026-oyun-ozetim.png', { type: 'image/png' });
+        const file = new File([blob], '2026-ozetim.png', { type: 'image/png' });
+        // Native Share Menu (Mobil kopyalama ve paylaşma için)
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
           await navigator.share({ files: [file], title: '2026 Oyun Takvimi' });
         } else {
@@ -93,10 +95,13 @@ export default function GameTracker() {
     } catch (err) { console.error(err); setIsExporting(false); }
   };
 
-  // Oyunları satırlara bölen otonom yardımcı fonksiyon
-  const chunkGames = (games) => {
+  // OTONOM SATIR MANTIĞI: Az oyun varsa yatay (stack) böl, çoksa ızgara yap.
+  const getPosterRows = (games) => {
     const rows = [];
-    for (let i = 0; i < games.length; i += 2) rows.push(games.slice(i, i + 2));
+    const chunkSize = games.length <= 2 ? 1 : 2; // 2 oyun varsa alt alta koy (yatay bölünme)
+    for (let i = 0; i < games.length; i += chunkSize) {
+      rows.push(games.slice(i, i + chunkSize));
+    }
     return rows;
   };
 
@@ -105,14 +110,14 @@ export default function GameTracker() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@400;700&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: #0e0e12; color: #e8e6f0; font-family: 'Outfit', sans-serif; overflow-x: hidden; }
+        body { background: #0e0e12; color: #e8e6f0; font-family: 'Outfit', sans-serif; }
         .page { max-width: 1400px; margin: 0 auto; padding: 20px; }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
         .site-title { font-family: 'Bebas Neue', sans-serif; font-size: 2.5rem; color: #c9b8ff; letter-spacing: 2px; }
         .share-btn { background: #2a2835; color: #c9b8ff; border: 1px solid #3d3a50; padding: 12px 24px; border-radius: 12px; cursor: pointer; font-weight: 700; transition: 0.3s; }
         .share-btn:hover { background: #c9b8ff; color: #000; }
 
-        /* MASAÜSTÜ ANA IZGARA */
+        /* MASAÜSTÜ 4 SÜTUN DÜZENİ */
         .grid-months { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
         @media (max-width: 1100px) { .grid-months { grid-template-columns: repeat(3, 1fr); } }
         @media (max-width: 850px) { .grid-months { grid-template-columns: repeat(2, 1fr); } }
@@ -126,10 +131,9 @@ export default function GameTracker() {
         .ui-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
         .ui-remove { position: absolute; top: 5px; right: 5px; background: #ff4d6d; color: white; border: none; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; opacity: 0; transition: 0.2s; z-index: 5; }
         .ui-card:hover .ui-remove { opacity: 1; }
-        .ui-add { aspect-ratio: 3/4; border: 2px dashed #2a2835; border-radius: 8px; color: #2a2835; font-size: 2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; background: none; transition: 0.3s; }
-        .ui-add:hover { border-color: #c9b8ff; color: #c9b8ff; }
+        .ui-add { aspect-ratio: 3/4; border: 2px dashed #2a2835; border-radius: 8px; color: #2a2835; font-size: 2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; background: none; }
 
-        /* 📸 POSTER SİSTEMİ (OTONOM) */
+        /* 📸 POSTER SİSTEMİ (SLOT-BASED HORIZONTAL SPLIT) */
         .is-exporting .grid-months { grid-template-columns: repeat(4, 1fr) !important; width: 1400px; padding: 40px; gap: 20px; }
         .is-exporting .month-col { height: 650px !important; }
         .is-exporting .poster-flex { display: flex; flex-direction: column; height: 100%; width: 100%; }
@@ -142,7 +146,7 @@ export default function GameTracker() {
 
         /* MODAL */
         .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
-        .modal { background: #16141f; width: 90%; max-width: 500px; border-radius: 24px; border: 1px solid #2a2835; max-height: 80vh; display: flex; flex-direction: column; overflow: hidden; }
+        .modal { background: #16141f; width: 90%; max-width: 500px; border-radius: 24px; border: 1px solid #2a2835; max-height: 80vh; overflow: hidden; display: flex; flex-direction: column; }
         .search-input { width: calc(100% - 40px); margin: 20px; background: #0e0e12; border: 1px solid #3d3a50; padding: 15px; color: white; border-radius: 12px; outline: none; }
         .search-results { flex: 1; overflow-y: auto; padding: 0 20px 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
         .search-card { cursor: pointer; text-align: center; }
@@ -162,10 +166,10 @@ export default function GameTracker() {
               <div key={mi} className="month-col">
                 <div className="month-label">{month} {games.length > 0 && `(${games.length})`}</div>
                 
-                {/* POSTER GÖRÜNÜMÜ (Sadece Paylaşırken Aktif) */}
+                {/* POSTER GÖRÜNÜMÜ: Yatay bölünme mantığı burada çalışır */}
                 {isExporting && (
                   <div className="poster-flex">
-                    {chunkGames(games).map((row, ri) => (
+                    {getPosterRows(games).map((row, ri) => (
                       <div key={ri} className="poster-row">
                         {row.map(game => (
                           <div key={game.id} className="poster-item">
@@ -177,7 +181,7 @@ export default function GameTracker() {
                   </div>
                 )}
 
-                {/* NORMAL KULLANICI ARAYÜZÜ */}
+                {/* NORMAL KULLANIM: 2 Sütunlu Izgara */}
                 {!isExporting && (
                   <div className="ui-grid">
                     {games.map((game) => (
@@ -205,7 +209,7 @@ export default function GameTracker() {
               {searching ? <div style={{textAlign:'center', padding:'20px'}}>Aranıyor...</div> : results.map(game => (
                 <div key={game.id} className="search-card" onClick={() => addGame(game)}>
                   <img src={game.cover?.url?.replace('t_thumb', 't_cover_big').replace(/^\/\//, 'https://')} alt={game.name} />
-                  <div style={{fontSize:'10px', marginTop:'5px', textAlign:'center'}}>{game.name}</div>
+                  <div style={{fontSize:'10px', marginTop:'5px', textAlign:'center', color: '#b8b4cc'}}>{game.name}</div>
                 </div>
               ))}
             </div>
