@@ -102,6 +102,8 @@ export default function GameTracker() {
         backgroundColor: '#0e0e12',
         useCORS: true,
         scale: 2,
+        scrollX: 0,
+        scrollY: -window.scrollY, // Sayfa kayık olsa bile düzgün yakala
       });
 
       canvas.toBlob(async (blob) => {
@@ -130,34 +132,30 @@ export default function GameTracker() {
           background: #0e0e12; 
           color: #e8e6f0; 
           font-family: 'Outfit', sans-serif;
-          overflow-x: hidden;
-        }
-
-        /* Desktop: Sayfayı tek ekrana sığdır */
-        @media (min-width: 1025px) {
-          body { overflow: hidden; }
+          min-height: 100vh;
+          overflow-y: auto; /* Artık aşağı inilebiliyor! */
         }
 
         .page { 
-          max-width: 1700px; 
+          max-width: 1600px; 
           margin: 0 auto; 
-          padding: 10px 20px; 
-          height: 100vh;
+          padding: 20px; 
           display: flex;
           flex-direction: column;
+          min-height: 100vh;
         }
         
         .header {
           display: flex; 
           justify-content: space-between; 
           align-items: center;
-          padding: 10px 0;
+          padding-bottom: 25px;
           flex-shrink: 0;
         }
 
         .site-title {
           font-family: 'Bebas Neue', sans-serif;
-          font-size: clamp(1.8rem, 4vw, 2.5rem);
+          font-size: clamp(2rem, 5vw, 3rem);
           letter-spacing: 2px;
           background: linear-gradient(135deg, #c9b8ff 0%, #ff8fc8 100%);
           -webkit-background-clip: text;
@@ -165,184 +163,134 @@ export default function GameTracker() {
         }
 
         .share-btn {
-          background: linear-gradient(135deg, #2a2835 0%, #1a1825 100%);
+          background: #2a2835;
           color: #c9b8ff; 
           border: 1px solid #3d3a50;
-          padding: 10px 20px; 
+          padding: 12px 24px; 
           border-radius: 12px; 
           cursor: pointer;
           font-weight: 600; 
-          box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-          transition: 0.3s;
+          transition: 0.3s ease;
         }
-        .share-btn:hover { border-color: #c9b8ff; transform: translateY(-2px); }
+        .share-btn:hover { background: #c9b8ff; color: #000; transform: translateY(-2px); }
 
-        /* ANA GRID */
+        /* ANA IZGARA - Daha ferah ve esnek */
         .grid-months {
           display: grid; 
           grid-template-columns: repeat(4, 1fr); 
-          gap: 15px;
-          flex: 1;
-          min-height: 0;
-          padding-bottom: 20px;
+          gap: 20px;
+          padding-bottom: 40px;
         }
 
-        @media (max-width: 1200px) { .grid-months { grid-template-columns: repeat(3, 1fr); } }
-        @media (max-width: 1024px) { 
-          .page { height: auto; }
-          .grid-months { grid-template-columns: repeat(2, 1fr); flex: none; }
-        }
+        @media (max-width: 1300px) { .grid-months { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 900px) { .grid-months { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 550px) { .grid-months { grid-template-columns: 1fr; } }
 
         .month-col {
-          background: rgba(22, 20, 31, 0.6); 
-          border: 1px solid rgba(42, 40, 53, 0.8); 
+          background: #16141f; 
+          border: 1px solid #2a2835; 
           border-radius: 20px;
-          padding: 15px; 
+          padding: 18px; 
           display: flex; 
           flex-direction: column;
-          backdrop-filter: blur(10px);
-          transition: 0.3s;
+          height: fit-content;
+          transition: border-color 0.3s;
         }
-        .month-col:hover { border-color: #3d3a50; background: rgba(22, 20, 31, 0.8); }
+        .month-col:hover { border-color: #3d3a50; }
 
         .month-header {
           display: flex;
           justify-content: space-between;
           align-items: center;
           margin-bottom: 15px;
+          padding-bottom: 8px;
+          border-bottom: 1px solid rgba(42, 40, 53, 0.5);
         }
 
         .month-label {
           font-family: 'Bebas Neue', sans-serif; 
           font-size: 1.5rem;
           color: #c9b8ff; 
-          letter-spacing: 1.5px;
-          text-shadow: 0 2px 10px rgba(201, 184, 255, 0.2);
+          letter-spacing: 1px;
         }
 
         .month-count {
-          background: #2a2835;
-          padding: 2px 10px;
-          border-radius: 20px;
           font-size: 0.75rem;
-          color: #ff8fc8;
+          color: #6b6880;
           font-weight: 700;
-          border: 1px solid #3d3a50;
+          letter-spacing: 1px;
         }
 
-        /* OYUN GRİDİ - Kapaklar burada büyüyor */
+        /* OYUNLAR - Büyük kapaklar korunuyor */
         .games-grid {
           display: grid; 
-          grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); 
-          gap: 12px;
-          overflow-y: auto;
-          padding-right: 5px;
+          grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); 
+          gap: 10px;
         }
-        
-        /* Custom Scrollbar */
-        .games-grid::-webkit-scrollbar { width: 4px; }
-        .games-grid::-webkit-scrollbar-thumb { background: #2a2835; border-radius: 10px; }
 
         .game-card {
           position: relative; 
           aspect-ratio: 3/4; 
-          border-radius: 12px;
+          border-radius: 10px;
           overflow: hidden; 
           background: #0e0e12;
-          box-shadow: 0 8px 20px rgba(0,0,0,0.4);
-          transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+          transition: 0.3s;
         }
-        .game-card:hover { transform: scale(1.05) translateY(-5px); z-index: 5; }
+        .game-card:hover { transform: scale(1.05); z-index: 5; }
         .game-card img { width: 100%; height: 100%; object-fit: cover; }
 
         .remove-btn {
-          position: absolute; top: 5px; right: 5px; width: 24px; height: 24px;
-          background: rgba(255, 77, 109, 0.9); border: none; border-radius: 50%;
-          color: white; font-size: 12px; cursor: pointer; opacity: 0;
+          position: absolute; top: 4px; right: 4px; width: 22px; height: 22px;
+          background: #ff4d6d; border: none; border-radius: 50%;
+          color: white; font-size: 11px; cursor: pointer; opacity: 0;
           display: flex; align-items: center; justify-content: center;
           transition: 0.2s; z-index: 10;
-          backdrop-filter: blur(4px);
         }
         .game-card:hover .remove-btn { opacity: 1; }
 
         .add-btn {
           aspect-ratio: 3/4; 
           border: 2px dashed #2a2835; 
-          border-radius: 12px;
-          background: rgba(42, 40, 53, 0.2); 
+          border-radius: 10px;
+          background: transparent; 
           color: #3d3a50; 
-          font-size: 2.5rem;
+          font-size: 2rem;
           cursor: pointer; 
           display: flex; align-items: center; justify-content: center;
           transition: 0.3s;
         }
-        .add-btn:hover { 
-          border-color: #c9b8ff; 
-          color: #c9b8ff; 
-          background: rgba(201, 184, 255, 0.05);
-          transform: translateY(-5px);
-        }
+        .add-btn:hover { border-color: #c9b8ff; color: #c9b8ff; background: rgba(201, 184, 255, 0.02); }
 
         /* MODAL */
         .modal-backdrop {
-          position: fixed; inset: 0; background: rgba(0,0,0,0.95);
+          position: fixed; inset: 0; background: rgba(0,0,0,0.9);
           display: flex; align-items: center; justify-content: center; z-index: 100;
-          backdrop-filter: blur(10px);
+          backdrop-filter: blur(8px);
         }
         .modal {
-          background: #16141f; width: 95%; max-width: 650px;
-          border-radius: 30px; border: 1px solid #2a2835;
-          max-height: 85vh; display: flex; flex-direction: column;
+          background: #16141f; width: 90%; max-width: 600px;
+          border-radius: 24px; border: 1px solid #2a2835;
+          max-height: 80vh; display: flex; flex-direction: column;
           overflow: hidden;
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
-        .modal-header {
-            padding: 30px;
-            background: linear-gradient(to bottom, #1c1a26, #16141f);
-            border-bottom: 1px solid #2a2835;
-        }
-        .search-results-area {
-            flex: 1;
-            overflow-y: auto;
-            padding: 25px;
-        }
-        .search-results-grid {
-          display: grid; 
-          grid-template-columns: repeat(3, 1fr); 
-          gap: 20px;
-        }
-        .search-item {
-          cursor: pointer;
-          transition: 0.3s;
-        }
-        .search-item-img {
-          width: 100%;
-          aspect-ratio: 3/4;
-          object-fit: cover;
-          border-radius: 15px;
-          background: #0e0e12;
-          box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-          border: 1px solid transparent;
-          transition: 0.3s;
-        }
-        .search-item:hover .search-item-img {
-            border-color: #c9b8ff;
-            transform: translateY(-5px);
-        }
+        .modal-header { padding: 25px; border-bottom: 1px solid #2a2835; }
+        .search-results { flex: 1; overflow-y: auto; padding: 20px; }
+        .search-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        .search-card { cursor: pointer; transition: 0.2s; }
+        .search-card img { width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 12px; border: 1px solid transparent; }
+        .search-card:hover img { border-color: #c9b8ff; transform: translateY(-3px); }
         .search-input {
           width: 100%; background: #0e0e12; border: 1px solid #2a2835;
-          padding: 18px; color: white; border-radius: 15px; outline: none;
-          font-size: 1.1rem; transition: 0.3s;
+          padding: 15px; color: white; border-radius: 12px; outline: none; font-size: 1rem;
         }
-        .search-input:focus { border-color: #c9b8ff; box-shadow: 0 0 15px rgba(201, 184, 255, 0.1); }
       `}</style>
 
       <div className="page">
         <header className="header">
           <h1 className="site-title">2026 OYUN TAKİBİ</h1>
           <button className="share-btn" onClick={handleShareImage}>
-            🖼️ Görsel Olarak Paylaş
+            🖼️ Görsel Paylaş
           </button>
         </header>
 
@@ -381,23 +329,23 @@ export default function GameTracker() {
         <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && setModal(null)}>
           <div className="modal">
             <div className="modal-header">
-                <div style={{ color: '#c9b8ff', fontSize: '1.2rem', fontWeight: '600', marginBottom: '20px', textAlign: 'center', fontFamily: 'Bebas Neue', letterSpacing: '1px' }}>
-                    {MONTHS[modal.monthIndex]} LİSTESİNE EKLE
+                <div style={{ color: '#c9b8ff', fontWeight: '600', marginBottom: '15px', textAlign: 'center', letterSpacing: '1px' }}>
+                    {MONTHS[modal.monthIndex]} AYINA EKLE
                 </div>
-                <input className="search-input" placeholder="Oyun ara..." value={query} onChange={handleQueryChange} autoFocus />
+                <input className="search-input" placeholder="Oyun ismi..." value={query} onChange={handleQueryChange} autoFocus />
             </div>
             
-            <div className="search-results-area">
+            <div className="search-results">
                 {searching ? (
-                    <div style={{ textAlign: 'center', color: '#c9b8ff', padding: '40px', letterSpacing: '1px' }}>ARANIYOR...</div>
+                    <div style={{ textAlign: 'center', color: '#c9b8ff', padding: '40px' }}>ARANIYOR...</div>
                 ) : (
-                    <div className="search-results-grid">
+                    <div className="search-grid">
                         {results.map((game) => {
                             const url = game.cover?.url?.replace('t_thumb', 't_cover_big').replace(/^\/\//, 'https://');
                             return (
-                                <div key={game.id} className="search-item" onClick={() => addGame({ id: game.id, name: game.name, coverUrl: url })}>
-                                    <img src={url} className="search-item-img" alt={game.name} />
-                                    <div style={{ fontSize: '11px', textAlign: 'center', color: '#b8b4cc', marginTop: '8px', fontWeight: '500' }}>
+                                <div key={game.id} className="search-card" onClick={() => addGame({ id: game.id, name: game.name, coverUrl: url })}>
+                                    <img src={url} alt={game.name} />
+                                    <div style={{ fontSize: '11px', textAlign: 'center', color: '#b8b4cc', marginTop: '8px', lineHeight: '1.2' }}>
                                         {game.name}
                                     </div>
                                 </div>
@@ -406,7 +354,7 @@ export default function GameTracker() {
                     </div>
                 )}
                 {!searching && query && results.length === 0 && (
-                    <div style={{ textAlign: 'center', color: '#6b6880', padding: '40px' }}>Oyun bulunamadı.</div>
+                    <div style={{ textAlign: 'center', color: '#6b6880', padding: '40px' }}>Sonuç bulunamadı.</div>
                 )}
             </div>
           </div>
