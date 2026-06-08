@@ -101,7 +101,7 @@ export default function GameTracker() {
       const canvas = await html2canvas(rosterRef.current, {
         backgroundColor: '#0e0e12',
         useCORS: true,
-        scale: 3, // Daha büyük ve net görsel için ölçek 3 yapıldı
+        scale: 2, // 2x netlik
         logging: false,
       });
 
@@ -111,8 +111,8 @@ export default function GameTracker() {
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
           await navigator.share({ 
             files: [file], 
-            title: '2026 Oyun Takvimim',
-            text: 'İşte 2026 oyun rotam!',
+            title: '2026 Oyun Takvimi',
+            text: 'İşte 2026 oyun kütüphanem!',
           });
         } else {
           const link = document.createElement('a');
@@ -139,9 +139,9 @@ export default function GameTracker() {
         }
 
         .page { 
-          max-width: 1600px; 
+          max-width: 1800px; 
           margin: 0 auto; 
-          padding: 30px 20px; 
+          padding: 20px; 
           display: flex;
           flex-direction: column;
         }
@@ -151,95 +151,72 @@ export default function GameTracker() {
           justify-content: space-between; 
           align-items: center;
           padding-bottom: 30px;
+          flex-shrink: 0;
         }
 
         .site-title {
           font-family: 'Bebas Neue', sans-serif;
           font-size: clamp(2rem, 5vw, 3.5rem);
-          letter-spacing: 3px;
+          letter-spacing: 4px;
           background: linear-gradient(135deg, #c9b8ff 0%, #ff8fc8 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
         }
 
         .share-btn {
-          background: linear-gradient(135deg, #2a2835 0%, #1a1825 100%);
+          background: #2a2835;
           color: #c9b8ff; 
           border: 1px solid #3d3a50;
-          padding: 14px 28px; 
-          border-radius: 14px; 
+          padding: 12px 24px; 
+          border-radius: 12px; 
           cursor: pointer;
-          font-weight: 600; 
-          transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-          box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+          font-weight: 700; 
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          transition: 0.3s;
         }
-        .share-btn:hover { border-color: #c9b8ff; transform: translateY(-3px); box-shadow: 0 8px 20px rgba(201, 184, 255, 0.15); }
+        .share-btn:hover { background: #c9b8ff; color: #000; border-color: #fff; }
 
-        /* GRID: 4 Sütun ve Sabit Yükseklikler */
+        /* ANA IZGARA: 4 Sütun (4x3 Tasarım) */
         .grid-months {
           display: grid; 
           grid-template-columns: repeat(4, 1fr); 
-          gap: 20px;
-          padding-bottom: 60px;
+          gap: 24px;
+          padding-bottom: 40px;
         }
 
-        @media (max-width: 1300px) { .grid-months { grid-template-columns: repeat(3, 1fr); } }
-        @media (max-width: 950px) { .grid-months { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 1400px) { .grid-months { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 1000px) { .grid-months { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 600px) { .grid-months { grid-template-columns: 1fr; } }
 
         .month-col {
-          background: #16141f; 
+          background: rgba(22, 20, 31, 0.7); 
           border: 1px solid #2a2835; 
           border-radius: 24px;
           padding: 20px; 
           display: flex; 
           flex-direction: column;
-          min-height: 500px; /* Estetik için sabit minimum yükseklik */
-          transition: 0.3s;
+          min-height: 450px; /* Kutuları eşitlemek için */
+          transition: 0.3s ease;
         }
-        .month-col:hover { border-color: #3d3a50; }
+        .month-col:hover { border-color: #c9b8ff; background: rgba(22, 20, 31, 1); }
 
         .month-label {
           font-family: 'Bebas Neue', sans-serif; 
-          font-size: 1.8rem;
-          color: #c9b8ff; 
+          font-size: 2rem;
+          color: #fff; 
           letter-spacing: 2px;
-          margin-bottom: 12px;
-          text-align: center;
-        }
-
-        .game-names-list {
           margin-bottom: 20px;
-          display: flex;
-          flex-direction: column;
-          gap: 5px;
-          max-height: 100px;
-          overflow-y: auto;
-          padding-right: 5px;
-        }
-        
-        .game-names-list::-webkit-scrollbar { width: 3px; }
-        .game-names-list::-webkit-scrollbar-thumb { background: #2a2835; border-radius: 10px; }
-
-        .game-name-item {
-          font-size: 0.7rem;
-          color: #6b6880;
-          font-weight: 600;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          text-transform: uppercase;
-          background: rgba(42, 40, 53, 0.3);
-          padding: 4px 8px;
-          border-radius: 4px;
+          text-align: center;
+          border-bottom: 2px solid #2a2835;
+          padding-bottom: 10px;
         }
 
+        /* OYUNLAR: Daha Büyük Kapaklar */
         .games-grid {
           display: grid; 
-          grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); 
-          gap: 12px;
-          border-top: 1px solid rgba(42, 40, 53, 0.5);
-          padding-top: 18px;
+          grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); 
+          gap: 15px;
           flex-grow: 1;
         }
 
@@ -248,54 +225,58 @@ export default function GameTracker() {
           aspect-ratio: 3/4; 
           border-radius: 12px;
           overflow: hidden; 
-          background: #0e0e12;
-          box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+          background: #000;
+          box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+          transition: transform 0.3s;
         }
+        .game-card:hover { transform: scale(1.05); z-index: 10; }
         .game-card img { width: 100%; height: 100%; object-fit: cover; }
 
         .remove-btn {
-          position: absolute; top: 5px; right: 5px; width: 22px; height: 22px;
-          background: #ff4d6d; border: none; border-radius: 50%;
-          color: white; font-size: 10px; cursor: pointer; opacity: 0;
+          position: absolute; top: 8px; right: 8px; width: 28px; height: 28px;
+          background: rgba(255, 77, 109, 0.95); border: none; border-radius: 50%;
+          color: white; font-size: 14px; cursor: pointer; opacity: 0;
           display: flex; align-items: center; justify-content: center;
-          transition: 0.2s; z-index: 10;
+          transition: 0.2s; z-index: 20;
+          font-weight: bold;
         }
         .game-card:hover .remove-btn { opacity: 1; }
 
         .add-btn {
           aspect-ratio: 3/4; 
-          border: 2px dashed #2a2835; 
+          border: 3px dashed #2a2835; 
           border-radius: 12px;
           background: transparent; 
           color: #3d3a50; 
-          font-size: 2.2rem;
+          font-size: 3rem;
           cursor: pointer; 
           display: flex; align-items: center; justify-content: center;
           transition: 0.3s;
         }
-        .add-btn:hover { border-color: #c9b8ff; color: #c9b8ff; background: rgba(201, 184, 255, 0.02); }
+        .add-btn:hover { border-color: #c9b8ff; color: #c9b8ff; background: rgba(201, 184, 255, 0.05); }
 
         /* MODAL */
         .modal-backdrop {
-          position: fixed; inset: 0; background: rgba(0,0,0,0.92);
+          position: fixed; inset: 0; background: rgba(0,0,0,0.95);
           display: flex; align-items: center; justify-content: center; z-index: 100;
-          backdrop-filter: blur(10px);
+          backdrop-filter: blur(15px);
         }
         .modal {
-          background: #16141f; width: 90%; max-width: 650px;
+          background: #16141f; width: 95%; max-width: 700px;
           border-radius: 30px; border: 1px solid #2a2835;
           max-height: 85vh; display: flex; flex-direction: column;
           overflow: hidden;
         }
-        .modal-header { padding: 30px; border-bottom: 1px solid #2a2835; }
-        .search-results { flex: 1; overflow-y: auto; padding: 25px; }
+        .modal-header { padding: 35px; border-bottom: 1px solid #2a2835; }
+        .search-results { flex: 1; overflow-y: auto; padding: 30px; }
         .search-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-        .search-card { cursor: pointer; transition: 0.3s; }
+        .search-card { cursor: pointer; transition: 0.3s; position: relative; }
         .search-card:hover { transform: scale(1.05); }
-        .search-card img { width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 15px; border: 1px solid #2a2835; }
+        .search-card img { width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 15px; border: 2px solid transparent; }
+        .search-card:hover img { border-color: #c9b8ff; }
         .search-input {
           width: 100%; background: #0e0e12; border: 1px solid #2a2835;
-          padding: 18px; color: white; border-radius: 15px; outline: none; font-size: 1.1rem;
+          padding: 20px; color: white; border-radius: 15px; outline: none; font-size: 1.2rem;
         }
       `}</style>
 
@@ -303,7 +284,7 @@ export default function GameTracker() {
         <header className="header">
           <h1 className="site-title">2026 OYUN TAKİBİ</h1>
           <button className="share-btn" onClick={handleShareImage}>
-            🖼️ Görsel Olarak Paylaş
+            📸 Poster Olarak Paylaş
           </button>
         </header>
 
@@ -312,14 +293,6 @@ export default function GameTracker() {
             <div key={mi} className="month-col">
               <div className="month-label">{month}</div>
               
-              <div className="game-names-list">
-                {(monthGames[mi] || []).map((game, index) => (
-                  <div key={game.id} className="game-name-item">
-                    {index + 1}. {game.name}
-                  </div>
-                ))}
-              </div>
-
               <div className="games-grid">
                 {(monthGames[mi] || []).map((game) => (
                   <div key={game.id} className="game-card">
@@ -348,23 +321,24 @@ export default function GameTracker() {
         <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && setModal(null)}>
           <div className="modal">
             <div className="modal-header">
-                <div style={{ color: '#c9b8ff', fontWeight: '600', marginBottom: '20px', textAlign: 'center', letterSpacing: '1px', fontFamily: 'Bebas Neue', fontSize: '1.4rem' }}>
-                    {MONTHS[modal.monthIndex]} AYINA OYUN EKLE
+                <div style={{ color: '#c9b8ff', fontSize: '1.5rem', fontWeight: '800', marginBottom: '20px', textAlign: 'center', fontFamily: 'Bebas Neue', letterSpacing: '2px' }}>
+                    {MONTHS[modal.monthIndex]} AYI İÇİN OYUN ARA
                 </div>
-                <input className="search-input" placeholder="Oyun ara..." value={query} onChange={handleQueryChange} autoFocus />
+                <input className="search-input" placeholder="Oyunun adını yazın..." value={query} onChange={handleQueryChange} autoFocus />
             </div>
             
             <div className="search-results">
                 {searching ? (
-                    <div style={{ textAlign: 'center', color: '#c9b8ff', padding: '40px', letterSpacing: '1px' }}>ARANIYOR...</div>
+                    <div style={{ textAlign: 'center', color: '#c9b8ff', padding: '50px', letterSpacing: '2px' }}>ARANIYOR...</div>
                 ) : (
                     <div className="search-grid">
                         {results.map((game) => {
-                            const url = game.cover?.url?.replace('t_thumb', 't_cover_big').replace(/^\/\//, 'https://');
+                            // En net kapak formatını kullan (t_cover_big_2x)
+                            const url = game.cover?.url?.replace('t_thumb', 't_cover_big_2x').replace(/^\/\//, 'https://');
                             return (
                                 <div key={game.id} className="search-card" onClick={() => addGame({ id: game.id, name: game.name, coverUrl: url })}>
                                     <img src={url} alt={game.name} />
-                                    <div style={{ fontSize: '11px', textAlign: 'center', color: '#b8b4cc', marginTop: '10px', fontWeight: '500' }}>
+                                    <div style={{ fontSize: '12px', textAlign: 'center', color: '#fff', marginTop: '10px', fontWeight: '600', textTransform: 'uppercase' }}>
                                         {game.name}
                                     </div>
                                 </div>
