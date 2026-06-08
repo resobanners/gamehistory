@@ -99,8 +99,8 @@ export default function GameTracker() {
     if (!rosterRef.current) return;
     setIsExporting(true);
 
-    // CSS güncellenmesi için bekle
-    await new Promise(r => setTimeout(r, 500));
+    // CSS'in tam olarak oturması için bekleme süresi
+    await new Promise(r => setTimeout(r, 600));
 
     try {
       const html2canvas = (await import('html2canvas')).default;
@@ -109,12 +109,12 @@ export default function GameTracker() {
         useCORS: true,
         scale: 2,
         logging: false,
-        windowWidth: 1400, // Poster çekiminde genişliği sabitle
+        windowWidth: 1400,
       });
 
       canvas.toBlob(async (blob) => {
         if (!blob) return;
-        const file = new File([blob], '2026-poster.png', { type: 'image/png' });
+        const file = new File([blob], '2026-oyunlarim.png', { type: 'image/png' });
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
           await navigator.share({ files: [file], title: '2026 Oyun Takvimim' });
         } else {
@@ -141,19 +141,10 @@ export default function GameTracker() {
 
         .page { max-width: 1400px; margin: 0 auto; padding: 20px; }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .site-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(1.5rem, 5vw, 3rem); background: linear-gradient(135deg, #c9b8ff 0%, #ff8fc8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
-        .site-title {
-          font-family: 'Bebas Neue', sans-serif;
-          font-size: clamp(1.5rem, 5vw, 3rem);
-          background: linear-gradient(135deg, #c9b8ff 0%, #ff8fc8 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
-
-        .share-btn {
-          background: #2a2835; color: #c9b8ff; border: 1px solid #3d3a50;
-          padding: 10px 20px; border-radius: 12px; cursor: pointer; font-weight: 700;
-        }
+        .share-btn { background: #2a2835; color: #c9b8ff; border: 1px solid #3d3a50; padding: 10px 20px; border-radius: 12px; cursor: pointer; font-weight: 700; transition: 0.3s; }
+        .share-btn:hover { background: #c9b8ff; color: #000; }
 
         .grid-months { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 
@@ -161,68 +152,51 @@ export default function GameTracker() {
         @media (max-width: 850px) { .grid-months { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 500px) { .grid-months { grid-template-columns: 1fr; } }
 
-        /* POSTER ÖZEL STİLLERİ - TAŞMAYI ÖNLEYEN YAPI */
+        /* POSTER MODU - KRİTİK DÜZELTMELER */
         .is-exporting .grid-months { 
             grid-template-columns: repeat(4, 1fr) !important; 
             width: 1400px !important; 
             gap: 20px !important;
-            padding: 20px;
+            padding: 30px !important;
         }
         .is-exporting .month-col { 
-            height: 600px !important; 
+            height: 550px !important; 
             display: flex !important; 
             flex-direction: column !important;
-            overflow: hidden !important; /* Alt aya taşmayı kesin engeller */
+            overflow: hidden !important;
+            border: 1px solid #3d3a50;
         }
         .is-exporting .games-grid { 
             flex: 1 !important; 
-            display: flex !important; 
-            flex-wrap: wrap !important;
-            align-content: stretch !important;
-            gap: 6px !important;
+            display: grid !important; 
+            height: 100% !important;
+            gap: 8px !important;
         }
         .is-exporting .game-card { 
             aspect-ratio: auto !important; 
-            flex: 1 1 45% !important; /* 2 sütun düzeni */
-            height: auto !important;
-            min-height: 0 !important;
+            height: 100% !important;
+            width: 100% !important;
         }
-        /* 1 veya 2 oyun varsa tam genişlik kaplayıp dikeyde uzasınlar */
-        .is-exporting .games-grid.fill-vertical { flex-direction: column !important; }
-        .is-exporting .games-grid.fill-vertical .game-card { flex: 1 !important; width: 100% !important; }
+        .is-exporting .game-card img { height: 100% !important; width: 100% !important; object-fit: cover !important; }
 
-        .month-col {
-          background: rgba(22, 20, 31, 0.8); border: 1px solid #2a2835; border-radius: 20px;
-          padding: 15px; min-height: 200px;
-        }
-
-        .month-label {
-          font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; color: #c9b8ff;
-          margin-bottom: 12px; text-align: center; border-bottom: 1px solid #2a2835; padding-bottom: 8px;
-        }
+        .month-col { background: rgba(22, 20, 31, 0.8); border: 1px solid #2a2835; border-radius: 20px; padding: 15px; }
+        .month-label { font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; color: #c9b8ff; margin-bottom: 12px; text-align: center; border-bottom: 1px solid #2a2835; padding-bottom: 8px; }
 
         .games-grid { display: grid; gap: 10px; grid-template-columns: repeat(2, 1fr); }
         .game-card { position: relative; aspect-ratio: 3/4; border-radius: 8px; overflow: hidden; background: #000; }
-        .game-card img { width: 100%; height: 100%; object-fit: cover; }
+        .game-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-        .remove-btn {
-          position: absolute; top: 5px; right: 5px; width: 26px; height: 26px;
-          background: rgba(255, 77, 109, 0.9); border: none; border-radius: 50%;
-          color: white; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center;
-          opacity: 0; transition: 0.2s;
-        }
+        .remove-btn { position: absolute; top: 5px; right: 5px; width: 26px; height: 26px; background: rgba(255, 77, 109, 0.9); border: none; border-radius: 50%; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0; transition: 0.2s; z-index: 10; }
         .game-card:hover .remove-btn { opacity: 1; }
 
-        .add-btn {
-          aspect-ratio: 3/4; border: 2px dashed #2a2835; border-radius: 8px;
-          color: #3d3a50; font-size: 2rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
-        }
+        .add-btn { aspect-ratio: 3/4; border: 2px dashed #2a2835; border-radius: 8px; color: #3d3a50; font-size: 2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
+        .add-btn:hover { border-color: #c9b8ff; color: #c9b8ff; }
 
         /* MODAL */
-        .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(8px); }
-        .modal { background: #16141f; width: 90%; max-width: 500px; border-radius: 24px; border: 1px solid #2a2835; max-height: 80vh; display: flex; flex-direction: column; overflow: hidden; }
+        .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(10px); }
+        .modal { background: #16141f; width: 95%; max-width: 500px; border-radius: 24px; border: 1px solid #2a2835; max-height: 80vh; display: flex; flex-direction: column; overflow: hidden; }
         .modal-header { padding: 20px; border-bottom: 1px solid #2a2835; }
-        .search-input { width: 100%; background: #0e0e12; border: 1px solid #3d3a50; padding: 12px; color: white; border-radius: 12px; outline: none; }
+        .search-input { width: 100%; background: #0e0e12; border: 1px solid #3d3a50; padding: 12px; color: white; border-radius: 12px; outline: none; font-size: 1rem; }
         .search-results { flex: 1; overflow-y: auto; padding: 15px; }
         .search-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
         .search-card { cursor: pointer; text-align: center; }
@@ -240,8 +214,20 @@ export default function GameTracker() {
         <div className="grid-months" ref={rosterRef}>
           {MONTHS.map((month, mi) => {
             const games = monthGames[mi] || [];
-            // Az oyun varsa dikey doldurma sınıfını ekle
-            const isFilling = isExporting && games.length > 0 && games.length < 3;
+            
+            // Poster çekilirken Grid yapısını oyun sayısına göre matematiksel olarak bölüyoruz
+            let gridStyles = {};
+            if (isExporting) {
+                const count = games.length;
+                if (count === 1) {
+                    gridStyles = { gridTemplateColumns: '1fr', gridTemplateRows: '1fr' };
+                } else if (count === 2) {
+                    gridStyles = { gridTemplateColumns: '1fr', gridTemplateRows: 'repeat(2, 1fr)' };
+                } else {
+                    const rows = Math.ceil(count / 2);
+                    gridStyles = { gridTemplateColumns: 'repeat(2, 1fr)', gridTemplateRows: `repeat(${rows}, 1fr)` };
+                }
+            }
 
             return (
               <div key={mi} className="month-col">
@@ -249,10 +235,14 @@ export default function GameTracker() {
                     {month} {games.length > 0 ? `(${games.length})` : ''}
                 </div>
                 
-                <div className={`games-grid ${isFilling ? 'fill-vertical' : ''}`}>
+                <div className="games-grid" style={gridStyles}>
                   {games.map((game) => (
                     <div key={game.id} className="game-card">
-                      <img src={game.coverUrl?.replace('t_thumb', 't_cover_big')} alt={game.name} crossOrigin="anonymous" />
+                      <img 
+                        src={game.coverUrl?.replace('t_thumb', 't_cover_big')} 
+                        alt={game.name} 
+                        crossOrigin="anonymous" 
+                      />
                       <button className="remove-btn" data-html2canvas-ignore="true" onClick={() => removeGame(mi, game.id)}>✕</button>
                     </div>
                   ))}
