@@ -101,7 +101,7 @@ export default function GameTracker() {
       const canvas = await html2canvas(rosterRef.current, {
         backgroundColor: '#0e0e12',
         useCORS: true,
-        scale: 3, // Görseli aşırı net yapmak için
+        scale: 3, 
         logging: false,
       });
 
@@ -169,7 +169,6 @@ export default function GameTracker() {
         }
         .share-btn:hover { background: #c9b8ff; color: #000; }
 
-        /* ANA IZGARA: 4 SÜTUN */
         .grid-months {
           display: grid; 
           grid-template-columns: repeat(4, 1fr); 
@@ -201,10 +200,9 @@ export default function GameTracker() {
           padding-bottom: 8px;
         }
 
-        /* OYUNLARIN AY İÇİNDEKİ YERLEŞİMİ - 2'li Izgara */
+        /* DİNAMİK IZGARA: Sütun sayısını aşağıda JSX içinde belirliyoruz */
         .games-grid {
           display: grid; 
-          grid-template-columns: repeat(2, 1fr); /* AY İÇİNDE 2 OYUN YAN YANA */
           gap: 10px;
         }
 
@@ -242,7 +240,6 @@ export default function GameTracker() {
         }
         .add-btn:hover { border-color: #c9b8ff; color: #c9b8ff; background: rgba(201, 184, 255, 0.03); }
 
-        /* MODAL */
         .modal-backdrop {
           position: fixed; inset: 0; background: rgba(0,0,0,0.95);
           display: flex; align-items: center; justify-content: center; z-index: 100;
@@ -275,32 +272,37 @@ export default function GameTracker() {
         </header>
 
         <div className="grid-months" ref={rosterRef}>
-          {MONTHS.map((month, mi) => (
-            <div key={mi} className="month-col">
-              <div className="month-label">{month}</div>
-              
-              <div className="games-grid">
-                {(monthGames[mi] || []).map((game) => (
-                  <div key={game.id} className="game-card">
-                    {/* IGDB cover resmini daha kaliteli çekiyoruz */}
-                    <img src={game.coverUrl?.replace('t_thumb', 't_cover_big')} alt={game.name} crossOrigin="anonymous" />
-                    <button 
-                      className="remove-btn" 
-                      data-html2canvas-ignore="true"
-                      onClick={() => removeGame(mi, game.id)}
-                    >✕</button>
-                  </div>
-                ))}
-                <button
-                  className="add-btn"
-                  data-html2canvas-ignore="true"
-                  onClick={() => { setModal({ monthIndex: mi }); setQuery(''); setResults([]); }}
-                >
-                  +
-                </button>
+          {MONTHS.map((month, mi) => {
+            const games = monthGames[mi] || [];
+            // DÜZELTME: Eğer 2 veya daha az oyun varsa tek sütun yap, böylece dikey alanı daha iyi doldurur.
+            const columnCount = games.length > 0 && games.length < 3 ? '1fr' : 'repeat(2, 1fr)';
+
+            return (
+              <div key={mi} className="month-col">
+                <div className="month-label">{month}</div>
+                
+                <div className="games-grid" style={{ gridTemplateColumns: columnCount }}>
+                  {games.map((game) => (
+                    <div key={game.id} className="game-card">
+                      <img src={game.coverUrl?.replace('t_thumb', 't_cover_big')} alt={game.name} crossOrigin="anonymous" />
+                      <button 
+                        className="remove-btn" 
+                        data-html2canvas-ignore="true"
+                        onClick={() => removeGame(mi, game.id)}
+                      >✕</button>
+                    </div>
+                  ))}
+                  <button
+                    className="add-btn"
+                    data-html2canvas-ignore="true"
+                    onClick={() => { setModal({ monthIndex: mi }); setQuery(''); setResults([]); }}
+                  >
+                    +
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
