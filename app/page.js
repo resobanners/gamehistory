@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 const MONTHS = [
   'Ocak', 'Şubat', 'Mart', 'Nisan',
@@ -8,7 +8,8 @@ const MONTHS = [
   'Eylül', 'Ekim', 'Kasım', 'Aralık',
 ];
 
-const STORAGE_KEY = 'game-tracker-2025';
+// Updated to 2026
+const STORAGE_KEY = 'game-tracker-2026';
 
 function useLocalStorage(key, initial) {
   const [state, setState] = useState(() => {
@@ -29,21 +30,20 @@ function useLocalStorage(key, initial) {
 }
 
 export default function GameTracker() {
-  // { [monthIndex]: Game[] }
   const [monthGames, setMonthGames] = useLocalStorage(
     STORAGE_KEY,
     Object.fromEntries(MONTHS.map((_, i) => [i, []]))
   );
 
-  const [modal, setModal] = useState(null); // { monthIndex }
+  const [modal, setModal] = useState(null);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [searching, setSearching] = useState(false);
   const [dragInfo, setDragInfo] = useState(null);
   const debounceRef = useRef(null);
 
-  // Search IGDB via our proxy
-  const searchGames = async (q) => {
+  // Optimized Search
+  const searchGames = useCallback(async (q) => {
     if (!q.trim()) { setResults([]); return; }
     setSearching(true);
     try {
@@ -52,22 +52,24 @@ export default function GameTracker() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           endpoint: 'games',
-          body: `search "${q}"; fields name,cover.url,first_release_date,rating; where cover != null; limit 12;`,
+          body: `search "${q}"; fields name,cover.url,first_release_date; where cover != null; limit 12;`,
         }),
       });
       const data = await res.json();
       setResults(Array.isArray(data) ? data : []);
     } catch {
       setResults([]);
+    } finally {
+      setSearching(false);
     }
-    setSearching(false);
-  };
+  }, []);
 
   const handleQueryChange = (e) => {
     const val = e.target.value;
     setQuery(val);
-    clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => searchGames(val), 400);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    // Faster debounce (300ms) for better feel
+    debounceRef.current = setTimeout(() => searchGames(val), 300);
   };
 
   const addGame = (game) => {
@@ -89,12 +91,26 @@ export default function GameTracker() {
     }));
   };
 
-  const coverUrl = (url) =>
-    url
-      ? url.replace('t_thumb', 't_cover_big').replace(/^\/\//, 'https://')
-      : null;
+  // Share functionality
+  const handleShare = async () => {
+    const shareData = {
+      title: '2026 Oyun Takibim',
+      text: 'Bu yıl oynayacağım oyunları listeledim!',
+      url: window.location.href,
+    };
 
-  // Drag-and-drop between months
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        alert('Link kopyalandı! Arkadaşlarına gönderebilirsin.');
+      }
+    } catch (err) {
+      console.error('Sharing failed', err);
+    }
+  };
+
   const onDragStart = (e, fromMonth, gameId) => {
     setDragInfo({ fromMonth, gameId });
     e.dataTransfer.effectAllowed = 'move';
@@ -128,58 +144,88 @@ export default function GameTracker() {
           color: #e8e6f0;
           font-family: 'Outfit', sans-serif;
           min-height: 100vh;
+          overflow-x: hidden;
         }
 
         .page {
           max-width: 1400px;
           margin: 0 auto;
-          padding: 48px 24px 80px;
+          padding: 24px 16px 80px;
+        }
+
+        .header-section {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          margin-bottom: 40px;
         }
 
         .site-title {
           font-family: 'Bebas Neue', sans-serif;
-          font-size: clamp(2.4rem, 5vw, 4rem);
-          letter-spacing: 0.12em;
+          font-size: clamp(2rem, 8vw, 3.5rem);
+          letter-spacing: 0.05em;
           background: linear-gradient(135deg, #c9b8ff 0%, #ff8fc8 50%, #ffcc70 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
-          margin-bottom: 8px;
         }
 
         .site-sub {
           color: #6b6880;
-          font-size: 0.9rem;
-          font-weight: 300;
-          letter-spacing: 0.05em;
-          margin-bottom: 56px;
+          font-size: 0.85rem;
+          margin-top: 4px;
         }
+
+        .share-btn {
+          background: #2a2835;
+          color: #c9b8ff;
+          border: 1px solid #3d3a50;
+          padding: 8px 16px;
+          border-radius: 99px;
+          font-size: 0.8rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .share-btn:hover { background: #3d3a50; transform: translateY(-2px); }
 
         .grid-months {
           display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 32px;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 20px;
         }
 
-        @media (max-width: 900px) {
-          .grid-months { grid-template-columns: repeat(2, 1fr); }
+        @media (max-width: 1100px) {
+          .grid-months { grid-template-columns: repeat(3, 1fr); }
         }
-        @media (max-width: 560px) {
+        @media (max-width: 768px) {
+          .grid-months { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+          .header-section { flex-direction: column; gap: 16px; }
+          .page { padding-top: 16px; }
+        }
+        @media (max-width: 480px) {
           .grid-months { grid-template-columns: 1fr; }
         }
 
         .month-col {
           display: flex;
           flex-direction: column;
-          gap: 12px;
+          gap: 10px;
+          background: #16141f;
+          padding: 12px;
+          border-radius: 12px;
+          border: 1px solid #2a2835;
         }
 
         .month-label {
           font-family: 'Bebas Neue', sans-serif;
-          font-size: 1.6rem;
-          letter-spacing: 0.1em;
+          font-size: 1.4rem;
+          letter-spacing: 0.05em;
           color: #c9b8ff;
-          padding-bottom: 6px;
+          padding-bottom: 4px;
           border-bottom: 1px solid #2a2835;
         }
 
@@ -187,196 +233,99 @@ export default function GameTracker() {
           display: grid;
           grid-template-columns: repeat(2, 1fr);
           gap: 8px;
-          min-height: 80px;
-          border-radius: 10px;
-          transition: background 0.2s;
-        }
-
-        .games-grid.drag-over {
-          background: rgba(201, 184, 255, 0.06);
-          outline: 2px dashed #c9b8ff55;
+          min-height: 60px;
         }
 
         .game-card {
           position: relative;
-          border-radius: 8px;
+          border-radius: 6px;
           overflow: hidden;
           aspect-ratio: 3/4;
-          background: #1a1825;
+          background: #0e0e12;
           cursor: grab;
-          group: true;
-          transition: transform 0.18s, box-shadow 0.18s;
+          transition: transform 0.15s;
         }
+        .game-card:hover { transform: scale(1.05); z-index: 2; }
 
-        .game-card:hover { transform: scale(1.04); box-shadow: 0 8px 32px #00000080; }
-        .game-card:active { cursor: grabbing; }
-
-        .game-card img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          display: block;
-        }
-
-        .game-card-overlay {
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(to top, #00000099 0%, transparent 50%);
-          opacity: 0;
-          transition: opacity 0.18s;
-          display: flex;
-          flex-direction: column;
-          justify-content: flex-end;
-          padding: 8px;
-        }
-
-        .game-card:hover .game-card-overlay { opacity: 1; }
-
-        .game-card-name {
-          font-size: 0.72rem;
-          font-weight: 600;
-          color: #fff;
-          line-height: 1.2;
-          text-shadow: 0 1px 4px #000;
-        }
+        .game-card img { width: 100%; height: 100%; object-fit: cover; }
 
         .remove-btn {
           position: absolute;
-          top: 5px;
-          right: 5px;
-          width: 22px;
-          height: 22px;
-          background: #ff4d6d;
+          top: 4px;
+          right: 4px;
+          width: 20px;
+          height: 20px;
+          background: rgba(255, 77, 109, 0.9);
           border: none;
           border-radius: 50%;
           color: #fff;
-          font-size: 0.7rem;
+          font-size: 0.6rem;
           cursor: pointer;
           display: flex;
           align-items: center;
           justify-content: center;
           opacity: 0;
-          transition: opacity 0.15s;
-          z-index: 10;
+          transition: opacity 0.2s;
         }
-
         .game-card:hover .remove-btn { opacity: 1; }
 
         .add-btn {
           aspect-ratio: 3/4;
-          border-radius: 8px;
-          border: 2px dashed #2e2b3a;
+          border-radius: 6px;
+          border: 2px dashed #2a2835;
           background: transparent;
           color: #3d3a50;
-          font-size: 1.6rem;
+          font-size: 1.4rem;
           cursor: pointer;
-          transition: border-color 0.18s, color 0.18s, background 0.18s;
           display: flex;
           align-items: center;
           justify-content: center;
+          transition: all 0.2s;
         }
+        .add-btn:hover { border-color: #c9b8ff; color: #c9b8ff; background: rgba(201, 184, 255, 0.03); }
 
-        .add-btn:hover {
-          border-color: #c9b8ff;
-          color: #c9b8ff;
-          background: rgba(201, 184, 255, 0.05);
-        }
-
-        /* Modal */
+        /* Modal Enhancements for Mobile */
         .modal-backdrop {
           position: fixed;
           inset: 0;
-          background: rgba(0,0,0,0.75);
-          backdrop-filter: blur(6px);
+          background: rgba(0,0,0,0.85);
+          backdrop-filter: blur(8px);
           z-index: 100;
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 24px;
-          animation: fadeIn 0.2s;
+          padding: 16px;
         }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         .modal {
           background: #16141f;
           border: 1px solid #2a2835;
-          border-radius: 16px;
+          border-radius: 20px;
           width: 100%;
-          max-width: 620px;
-          max-height: 85vh;
+          max-width: 500px;
+          max-height: 80vh;
           display: flex;
           flex-direction: column;
           overflow: hidden;
-          animation: slideUp 0.22s cubic-bezier(.16,1,.3,1);
-        }
-
-        @keyframes slideUp {
-          from { transform: translateY(24px); opacity: 0; }
-          to { transform: translateY(0); opacity: 1; }
-        }
-
-        .modal-header {
-          padding: 20px 24px 16px;
-          border-bottom: 1px solid #2a2835;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-        }
-
-        .modal-title {
-          font-family: 'Bebas Neue', sans-serif;
-          font-size: 1.3rem;
-          letter-spacing: 0.08em;
-          color: #c9b8ff;
-        }
-
-        .modal-close {
-          background: none;
-          border: none;
-          color: #6b6880;
-          font-size: 1.2rem;
-          cursor: pointer;
-          transition: color 0.15s;
-          line-height: 1;
-        }
-        .modal-close:hover { color: #fff; }
-
-        .search-bar {
-          padding: 16px 24px;
-          border-bottom: 1px solid #2a2835;
         }
 
         .search-input {
           width: 100%;
           background: #0e0e12;
           border: 1px solid #2a2835;
-          border-radius: 8px;
-          padding: 10px 14px;
-          color: #e8e6f0;
-          font-family: 'Outfit', sans-serif;
-          font-size: 0.95rem;
+          border-radius: 12px;
+          padding: 12px 16px;
+          color: #fff;
+          font-size: 1rem;
           outline: none;
-          transition: border-color 0.15s;
         }
-
         .search-input:focus { border-color: #c9b8ff; }
-        .search-input::placeholder { color: #3d3a50; }
-
-        .results-area {
-          flex: 1;
-          overflow-y: auto;
-          padding: 16px 24px;
-        }
-
-        .results-area::-webkit-scrollbar { width: 5px; }
-        .results-area::-webkit-scrollbar-track { background: transparent; }
-        .results-area::-webkit-scrollbar-thumb { background: #2a2835; border-radius: 99px; }
 
         .results-grid {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
-          gap: 10px;
+          gap: 12px;
+          padding: 16px;
         }
 
         .result-card {
@@ -384,50 +333,33 @@ export default function GameTracker() {
           border-radius: 8px;
           overflow: hidden;
           background: #1a1825;
-          border: 2px solid transparent;
-          transition: border-color 0.15s, transform 0.15s;
-          position: relative;
+          transition: transform 0.2s;
         }
-
-        .result-card:hover { border-color: #c9b8ff; transform: scale(1.03); }
-
-        .result-card img {
-          width: 100%;
-          aspect-ratio: 3/4;
-          object-fit: cover;
-          display: block;
-        }
-
+        .result-card:hover { transform: translateY(-4px); }
         .result-card-name {
-          padding: 6px 8px;
-          font-size: 0.72rem;
-          font-weight: 500;
+          padding: 6px;
+          font-size: 0.7rem;
+          text-align: center;
           color: #b8b4cc;
-          line-height: 1.3;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
-        .empty-state {
-          color: #3d3a50;
-          text-align: center;
-          padding: 40px 0;
-          font-size: 0.9rem;
-        }
-
-        .spinner {
-          text-align: center;
-          padding: 40px;
-          color: #c9b8ff;
-          font-size: 0.85rem;
-          letter-spacing: 0.08em;
-        }
-
-        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
-        .spinner { animation: pulse 1.2s infinite; }
+        .spinner { padding: 40px; text-align: center; color: #c9b8ff; animation: pulse 1s infinite; }
+        @keyframes pulse { 50% { opacity: 0.5; } }
       `}</style>
 
       <div className="page">
-        <h1 className="site-title">2025 Oyun Takibi</h1>
-        <p className="site-sub">Oynadığın oyunları aylara göre takip et · Sürükle & bırak ile taşı</p>
+        <header className="header-section">
+          <div>
+            <h1 className="site-title">2026 Oyun Takibi</h1>
+            <p className="site-sub">Oyunlarını planla, listeni paylaş.</p>
+          </div>
+          <button className="share-btn" onClick={handleShare}>
+            <span>📤</span> Listeyi Paylaş
+          </button>
+        </header>
 
         <div className="grid-months">
           {MONTHS.map((month, mi) => (
@@ -436,12 +368,6 @@ export default function GameTracker() {
               className="month-col"
               onDrop={(e) => onDrop(e, mi)}
               onDragOver={onDragOver}
-              onDragEnter={(e) => e.currentTarget.querySelector('.games-grid')?.classList.add('drag-over')}
-              onDragLeave={(e) => {
-                if (!e.currentTarget.contains(e.relatedTarget)) {
-                  e.currentTarget.querySelector('.games-grid')?.classList.remove('drag-over');
-                }
-              }}
             >
               <div className="month-label">{month}</div>
               <div className="games-grid">
@@ -451,29 +377,17 @@ export default function GameTracker() {
                     className="game-card"
                     draggable
                     onDragStart={(e) => onDragStart(e, mi, game.id)}
-                    onDragEnd={() => document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'))}
                   >
-                    {game.coverUrl ? (
-                      <img src={game.coverUrl} alt={game.name} loading="lazy" />
-                    ) : (
-                      <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100%', color:'#3d3a50', fontSize:'0.7rem', textAlign:'center', padding:'8px' }}>
-                        {game.name}
-                      </div>
-                    )}
-                    <div className="game-card-overlay">
-                      <div className="game-card-name">{game.name}</div>
-                    </div>
+                    <img src={game.coverUrl} alt={game.name} loading="lazy" />
                     <button
                       className="remove-btn"
                       onClick={() => removeGame(mi, game.id)}
-                      title="Kaldır"
                     >✕</button>
                   </div>
                 ))}
                 <button
                   className="add-btn"
                   onClick={() => { setModal({ monthIndex: mi }); setQuery(''); setResults([]); }}
-                  title="Oyun ekle"
                 >
                   +
                 </button>
@@ -484,53 +398,41 @@ export default function GameTracker() {
       </div>
 
       {modal && (
-        <div className="modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) { setModal(null); setQuery(''); setResults([]); }}}>
+        <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && setModal(null)}>
           <div className="modal">
-            <div className="modal-header">
-              <span className="modal-title">Oyun Ekle — {MONTHS[modal.monthIndex]}</span>
-              <button className="modal-close" onClick={() => { setModal(null); setQuery(''); setResults([]); }}>✕</button>
+            <div style={{ padding: '20px', borderBottom: '1px solid #2a2835', display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ fontWeight: '600', color: '#c9b8ff' }}>{MONTHS[modal.monthIndex]} İçin Oyun Ara</span>
+              <button onClick={() => setModal(null)} style={{ background: 'none', border: 'none', color: '#6b6880', cursor: 'pointer' }}>✕</button>
             </div>
-            <div className="search-bar">
+            <div style={{ padding: '16px' }}>
               <input
                 className="search-input"
                 type="text"
-                placeholder="Oyun ara… (örn: Elden Ring)"
+                placeholder="Hızlıca oyun ara..."
                 value={query}
                 onChange={handleQueryChange}
                 autoFocus
               />
             </div>
-            <div className="results-area">
+            <div style={{ flex: 1, overflowY: 'auto' }}>
               {searching ? (
-                <div className="spinner">Aranıyor…</div>
-              ) : results.length > 0 ? (
+                <div className="spinner">Aranıyor...</div>
+              ) : (
                 <div className="results-grid">
                   {results.map((game) => {
-                    const url = game.cover?.url
-                      ? game.cover.url.replace('t_thumb', 't_cover_big').replace(/^\/\//, 'https://')
-                      : null;
+                    const url = game.cover?.url?.replace('t_thumb', 't_cover_big').replace(/^\/\//, 'https://');
                     return (
                       <div
                         key={game.id}
                         className="result-card"
                         onClick={() => addGame({ id: game.id, name: game.name, coverUrl: url })}
                       >
-                        {url ? (
-                          <img src={url} alt={game.name} loading="lazy" />
-                        ) : (
-                          <div style={{ aspect:'3/4', background:'#1a1825', display:'flex', alignItems:'center', justifyContent:'center', aspectRatio:'3/4', padding:'12px', color:'#6b6880', fontSize:'0.75rem', textAlign:'center' }}>
-                            {game.name}
-                          </div>
-                        )}
+                        <img src={url || 'https://via.placeholder.com/150x200?text=No+Image'} alt={game.name} style={{ width: '100%', aspectRation: '3/4', objectFit: 'cover' }} />
                         <div className="result-card-name">{game.name}</div>
                       </div>
                     );
                   })}
                 </div>
-              ) : query ? (
-                <div className="empty-state">Sonuç bulunamadı</div>
-              ) : (
-                <div className="empty-state">Aramaya başla…</div>
               )}
             </div>
           </div>
