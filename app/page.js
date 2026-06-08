@@ -30,6 +30,7 @@ function useLocalStorage(key, initial) {
 
 export default function GameTracker() {
   const rosterRef = useRef(null);
+  const [isExporting, setIsExporting] = useState(false); // Paylaşım modu takibi
 
   useEffect(() => {
     document.title = "Müdavim Oyun Takibi";
@@ -96,28 +97,39 @@ export default function GameTracker() {
 
   const handleShareImage = async () => {
     if (!rosterRef.current) return;
-    try {
-      const html2canvas = (await import('html2canvas')).default;
-      const canvas = await html2canvas(rosterRef.current, {
-        backgroundColor: '#0e0e12',
-        useCORS: true,
-        scale: 3, 
-        logging: false,
-      });
+    
+    // 1. Paylaşım modunu aç (CSS sınıfları tetiklenir)
+    setIsExporting(true);
 
-      canvas.toBlob(async (blob) => {
-        if (!blob) return;
-        const file = new File([blob], '2026-posterim.png', { type: 'image/png' });
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({ files: [file], title: '2026 Oyun Takvimi' });
-        } else {
-          const link = document.createElement('a');
-          link.href = URL.createObjectURL(blob);
-          link.download = '2026-oyun-takvimi.png';
-          link.click();
-        }
-      }, 'image/png');
-    } catch (err) { console.error(err); }
+    // 2. DOM'un güncellenmesi için kısa bir süre bekle
+    setTimeout(async () => {
+      try {
+        const html2canvas = (await import('html2canvas')).default;
+        const canvas = await html2canvas(rosterRef.current, {
+          backgroundColor: '#0e0e12',
+          useCORS: true,
+          scale: 3,
+          logging: false,
+        });
+
+        canvas.toBlob(async (blob) => {
+          if (!blob) return;
+          const file = new File([blob], '2026-posterim.png', { type: 'image/png' });
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({ files: [file], title: '2026 Oyun Takvimi' });
+          } else {
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = '2026-oyun-takvimi.png';
+            link.click();
+          }
+          setIsExporting(false); // 3. İşlem bitince modu kapat
+        }, 'image/png');
+      } catch (err) { 
+        console.error(err); 
+        setIsExporting(false);
+      }
+    }, 200);
   };
 
   return (
@@ -189,6 +201,23 @@ export default function GameTracker() {
           min-height: 200px;
         }
 
+        /* PAYLAŞIM MODU ÖZEL STİLLERİ */
+        .is-exporting .month-col {
+            height: 450px; /* Poster için tüm aylar sabit yüksekliğe gelir */
+        }
+        .is-exporting .games-grid {
+            flex: 1; /* Oyunlar sütun boyuna yayılır */
+            gap: 0px; /* Boşlukları posterde kapatmak isteyebilirsin */
+            grid-auto-rows: 1fr; /* Tüm satırlar eşit boyuta gelir */
+        }
+        .is-exporting .game-card {
+            aspect-ratio: auto; /* Sabit oranı boz ki boyu dikeyde doldursun */
+            border-radius: 0; /* İstersen posterde daha bitişik dursunlar */
+        }
+        .is-exporting .game-card img {
+            object-position: center;
+        }
+
         .month-label {
           font-family: 'Bebas Neue', sans-serif; 
           font-size: 1.6rem;
@@ -200,7 +229,6 @@ export default function GameTracker() {
           padding-bottom: 8px;
         }
 
-        /* DİNAMİK IZGARA: Sütun sayısını aşağıda JSX içinde belirliyoruz */
         .games-grid {
           display: grid; 
           gap: 10px;
@@ -263,19 +291,25 @@ export default function GameTracker() {
         }
       `}</style>
 
-      <div className="page">
+      <div className={`page ${isExporting ? 'is-exporting' : ''}`}>
         <header className="header">
           <h1 className="site-title">2026 OYUN TAKİBİ</h1>
           <button className="share-btn" onClick={handleShareImage}>
-            📸 Poster Olarak Paylaş
+            {isExporting ? 'Hazırlanıyor...' : '📸 Poster Olarak Paylaş'}
           </button>
         </header>
 
         <div className="grid-months" ref={rosterRef}>
           {MONTHS.map((month, mi) => {
             const games = monthGames[mi] || [];
-            // DÜZELTME: Eğer 2 veya daha az oyun varsa tek sütun yap, böylece dikey alanı daha iyi doldurur.
-            const columnCount = games.length > 0 && games.length < 3 ? '1fr' : 'repeat(2, 1fr)';
+            
+            // PAYLAŞIM MODUNDA MANTIĞI:
+            // Sadece paylaşırken: 2 veya daha az oyunda tek sütun, 3+ oyunda 2 sütun.
+            // Normal modda: Her zaman 2 sütun (senin istediğin gibi).
+            let columnCount = 'repeat(2, 1fr)';
+            if (isExporting) {
+                columnCount = games.length > 0 && games.length < 3 ? '1fr' : 'repeat(2, 1fr)';
+            }
 
             return (
               <div key={mi} className="month-col">
@@ -292,13 +326,16 @@ export default function GameTracker() {
                       >✕</button>
                     </div>
                   ))}
-                  <button
-                    className="add-btn"
-                    data-html2canvas-ignore="true"
-                    onClick={() => { setModal({ monthIndex: mi }); setQuery(''); setResults([]); }}
-                  >
-                    +
-                  </button>
+                  
+                  {/* Normal modda butonu göster, paylaşırken gizle */}
+                  {!isExporting && (
+                    <button
+                      className="add-btn"
+                      onClick={() => { setModal({ monthIndex: mi }); setQuery(''); setResults([]); }}
+                    >
+                      +
+                    </button>
+                  )}
                 </div>
               </div>
             );
