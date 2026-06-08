@@ -131,12 +131,10 @@ export default function GameTracker() {
           background: #0e0e12; 
           color: #e8e6f0; 
           font-family: 'Outfit', sans-serif;
-          overflow: hidden; /* Masaüstünde scroll'u tamamen kapat */
+          overflow: hidden;
         }
 
-        @media (max-width: 1024px) {
-          body { overflow: auto; }
-        }
+        @media (max-width: 1024px) { body { overflow: auto; } }
 
         .page { 
           max-width: 1600px; 
@@ -151,13 +149,13 @@ export default function GameTracker() {
           display: flex; 
           justify-content: space-between; 
           align-items: center;
-          padding: 5px 0;
+          padding: 8px 0;
           flex-shrink: 0;
         }
 
         .site-title {
           font-family: 'Bebas Neue', sans-serif;
-          font-size: clamp(1.8rem, 4vw, 2.5rem);
+          font-size: clamp(1.8rem, 4vw, 2.8rem);
           background: linear-gradient(135deg, #c9b8ff 0%, #ff8fc8 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
@@ -167,25 +165,27 @@ export default function GameTracker() {
           background: #2a2835;
           color: #c9b8ff; 
           border: 1px solid #3d3a50;
-          padding: 8px 16px; 
-          border-radius: 10px; 
+          padding: 10px 20px; 
+          border-radius: 12px; 
           cursor: pointer;
-          font-size: 0.85rem;
+          font-size: 0.9rem;
           font-weight: 600; 
+          transition: 0.2s;
         }
+        .share-btn:hover { background: #c9b8ff; color: #000; }
 
         .grid-months {
           display: grid; 
           grid-template-columns: repeat(4, 1fr); 
-          gap: 10px;
+          gap: 12px;
           flex: 1;
           min-height: 0;
-          padding-bottom: 10px;
+          padding-bottom: 15px;
         }
 
         @media (max-width: 1024px) { 
           .grid-months { grid-template-columns: repeat(3, 1fr); flex: none; height: auto; }
-          .page { height: auto; overflow: visible; }
+          .page { height: auto; }
         }
         @media (max-width: 768px) { .grid-months { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 480px) { .grid-months { grid-template-columns: 1fr; } }
@@ -193,93 +193,120 @@ export default function GameTracker() {
         .month-col {
           background: #16141f; 
           border: 1px solid #2a2835; 
-          border-radius: 12px;
-          padding: 10px; 
+          border-radius: 14px;
+          padding: 12px; 
           display: flex; 
           flex-direction: column;
           overflow: hidden;
         }
 
+        .month-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: baseline;
+          border-bottom: 1px solid #2a2835;
+          margin-bottom: 10px;
+          padding-bottom: 5px;
+        }
+
         .month-label {
           font-family: 'Bebas Neue', sans-serif; 
-          font-size: 1.2rem;
+          font-size: 1.3rem;
           color: #c9b8ff; 
-          margin-bottom: 8px; 
-          border-bottom: 1px solid #2a2835;
-          padding-bottom: 4px;
+          letter-spacing: 1px;
+        }
+
+        .month-count {
+          font-size: 0.8rem;
+          color: #6b6880;
+          font-weight: 600;
         }
 
         .games-grid {
           display: grid; 
-          grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); 
-          gap: 6px;
-          overflow-y: auto; /* Kutu içi dolarsa sadece kutu içinde scroll olsun */
+          grid-template-columns: repeat(auto-fill, minmax(75px, 1fr)); 
+          gap: 8px;
+          overflow-y: auto;
         }
 
         .game-card {
           position: relative; 
           aspect-ratio: 3/4; 
-          border-radius: 4px;
+          border-radius: 6px;
           overflow: hidden; 
           background: #0e0e12;
+          box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
         .game-card img { width: 100%; height: 100%; object-fit: cover; }
 
         .remove-btn {
-          position: absolute; top: 2px; right: 2px; width: 18px; height: 18px;
+          position: absolute; top: 3px; right: 3px; width: 20px; height: 20px;
           background: #ff4d6d; border: none; border-radius: 50%;
-          color: white; font-size: 10px; cursor: pointer; opacity: 0;
+          color: white; font-size: 11px; cursor: pointer; opacity: 0;
           display: flex; align-items: center; justify-content: center;
-          z-index: 2;
+          transition: opacity 0.2s; z-index: 2;
         }
         .game-card:hover .remove-btn { opacity: 1; }
 
         .add-btn {
           aspect-ratio: 3/4; 
-          border: 1.5px dashed #2a2835; 
-          border-radius: 4px;
+          border: 2px dashed #2a2835; 
+          border-radius: 6px;
           background: transparent; 
           color: #3d3a50; 
-          font-size: 1.5rem;
+          font-size: 1.8rem;
           cursor: pointer; 
           display: flex; align-items: center; justify-content: center;
+          transition: 0.2s;
         }
         .add-btn:hover { border-color: #c9b8ff; color: #c9b8ff; }
 
-        /* MODAL VE ARAMA FIX */
+        /* MODAL VE ARAMA */
         .modal-backdrop {
           position: fixed; inset: 0; background: rgba(0,0,0,0.9);
           display: flex; align-items: center; justify-content: center; z-index: 100;
+          backdrop-filter: blur(5px);
         }
         .modal {
-          background: #16141f; width: 95%; max-width: 600px;
-          border-radius: 16px; border: 1px solid #2a2835;
-          max-height: 85vh; display: flex; flex-direction: column;
+          background: #16141f; width: 90%; max-width: 550px;
+          border-radius: 20px; border: 1px solid #2a2835;
+          max-height: 80vh; display: flex; flex-direction: column;
+          overflow: hidden;
+        }
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #2a2835;
+            flex-shrink: 0;
+        }
+        .search-results-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
         }
         .search-results-grid {
           display: grid; 
           grid-template-columns: repeat(3, 1fr); 
-          gap: 15px; 
-          padding: 20px;
-          overflow-y: auto;
+          gap: 15px;
         }
         .search-item {
           cursor: pointer;
-          display: flex;
-          flex-direction: column;
-          gap: 5px;
+          transition: transform 0.2s;
         }
+        .search-item:hover { transform: scale(1.05); }
         .search-item-img {
           width: 100%;
-          aspect-ratio: 3/4; /* Tüm arama sonuçlarını aynı boyuta zorla */
+          aspect-ratio: 3/4;
           object-fit: cover;
           border-radius: 8px;
           background: #0e0e12;
+          border: 1px solid #2a2835;
         }
         .search-input {
           width: 100%; background: #0e0e12; border: 1px solid #2a2835;
-          padding: 15px; color: white; border-radius: 10px; outline: none;
+          padding: 14px; color: white; border-radius: 10px; outline: none;
+          font-size: 1rem;
         }
+        .search-input:focus { border-color: #c9b8ff; }
       `}</style>
 
       <div className="page">
@@ -293,7 +320,10 @@ export default function GameTracker() {
         <div className="grid-months" ref={rosterRef}>
           {MONTHS.map((month, mi) => (
             <div key={mi} className="month-col">
-              <div className="month-label">{month}</div>
+              <div className="month-header">
+                <div className="month-label">{month}</div>
+                <div className="month-count">({monthGames[mi]?.length || 0})</div>
+              </div>
               <div className="games-grid">
                 {(monthGames[mi] || []).map((game) => (
                   <div key={game.id} className="game-card">
@@ -321,31 +351,34 @@ export default function GameTracker() {
       {modal && (
         <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && setModal(null)}>
           <div className="modal">
-            <div style={{ padding: '20px', textAlign: 'center' }}>
-              <span style={{ color: '#c9b8ff', fontWeight: '600' }}>
-                {MONTHS[modal.monthIndex].charAt(0) + MONTHS[modal.monthIndex].slice(1).toLowerCase()} ayına oyun ekle:
-              </span>
+            <div className="modal-header">
+                <div style={{ color: '#c9b8ff', fontWeight: '600', marginBottom: '15px', textAlign: 'center' }}>
+                    {MONTHS[modal.monthIndex].charAt(0) + MONTHS[modal.monthIndex].slice(1).toLowerCase()} ayına oyun ekle
+                </div>
+                <input className="search-input" placeholder="Oyun ara..." value={query} onChange={handleQueryChange} autoFocus />
             </div>
-            <div style={{ padding: '0 20px 10px' }}>
-              <input className="search-input" placeholder="Oyun ismi yazın..." value={query} onChange={handleQueryChange} autoFocus />
-            </div>
-            <div className="search-results-grid">
-              {searching ? <div style={{ gridColumn: 'span 3', textAlign: 'center', color: '#c9b8ff' }}>Aranıyor...</div> : (
-                results.map((game) => {
-                  const url = game.cover?.url?.replace('t_thumb', 't_cover_big').replace(/^\/\//, 'https://');
-                  return (
-                    <div key={game.id} className="search-item" onClick={() => addGame({ id: game.id, name: game.name, coverUrl: url })}>
-                      <img src={url} className="search-item-img" alt={game.name} />
-                      <div style={{ fontSize: '11px', textAlign: 'center', color: '#b8b4cc', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {game.name}
-                      </div>
+            
+            <div className="search-results-area">
+                {searching ? (
+                    <div style={{ textAlign: 'center', color: '#c9b8ff', padding: '20px' }}>Aranıyor...</div>
+                ) : (
+                    <div className="search-results-grid">
+                        {results.map((game) => {
+                            const url = game.cover?.url?.replace('t_thumb', 't_cover_big').replace(/^\/\//, 'https://');
+                            return (
+                                <div key={game.id} className="search-item" onClick={() => addGame({ id: game.id, name: game.name, coverUrl: url })}>
+                                    <img src={url} className="search-item-img" alt={game.name} />
+                                    <div style={{ fontSize: '11px', textAlign: 'center', color: '#b8b4cc', marginTop: '5px', lineHeight: '1.2' }}>
+                                        {game.name}
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
-                  );
-                })
-              )}
-              {!searching && query && results.length === 0 && (
-                <div style={{ gridColumn: 'span 3', textAlign: 'center', color: '#6b6880' }}>Oyun bulunamadı.</div>
-              )}
+                )}
+                {!searching && query && results.length === 0 && (
+                    <div style={{ textAlign: 'center', color: '#6b6880', padding: '20px' }}>Oyun bulunamadı.</div>
+                )}
             </div>
           </div>
         </div>
