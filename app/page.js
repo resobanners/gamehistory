@@ -61,7 +61,7 @@ export default function GameTracker() {
       const data = await res.json();
       const filtered = (Array.isArray(data) ? data : []).filter(g => g.cover && g.cover.url);
       setResults(filtered);
-    } catch (err) {
+    } catch {
       setResults([]);
     } finally {
       setSearching(false);
@@ -101,19 +101,15 @@ export default function GameTracker() {
       const canvas = await html2canvas(rosterRef.current, {
         backgroundColor: '#0e0e12',
         useCORS: true,
-        scale: 2, // 2x netlik
+        scale: 3, // Görseli aşırı net yapmak için
         logging: false,
       });
 
       canvas.toBlob(async (blob) => {
         if (!blob) return;
-        const file = new File([blob], '2026-takvimi.png', { type: 'image/png' });
+        const file = new File([blob], '2026-posterim.png', { type: 'image/png' });
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({ 
-            files: [file], 
-            title: '2026 Oyun Takvimi',
-            text: 'İşte 2026 oyun kütüphanem!',
-          });
+          await navigator.share({ files: [file], title: '2026 Oyun Takvimi' });
         } else {
           const link = document.createElement('a');
           link.href = URL.createObjectURL(blob);
@@ -135,11 +131,10 @@ export default function GameTracker() {
           background: #0e0e12; 
           color: #e8e6f0; 
           font-family: 'Outfit', sans-serif;
-          min-height: 100vh;
         }
 
         .page { 
-          max-width: 1800px; 
+          max-width: 1400px; 
           margin: 0 auto; 
           padding: 20px; 
           display: flex;
@@ -150,14 +145,13 @@ export default function GameTracker() {
           display: flex; 
           justify-content: space-between; 
           align-items: center;
-          padding-bottom: 30px;
-          flex-shrink: 0;
+          margin-bottom: 25px;
         }
 
         .site-title {
           font-family: 'Bebas Neue', sans-serif;
-          font-size: clamp(2rem, 5vw, 3.5rem);
-          letter-spacing: 4px;
+          font-size: clamp(2rem, 5vw, 3rem);
+          letter-spacing: 3px;
           background: linear-gradient(135deg, #c9b8ff 0%, #ff8fc8 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
@@ -170,113 +164,105 @@ export default function GameTracker() {
           padding: 12px 24px; 
           border-radius: 12px; 
           cursor: pointer;
-          font-weight: 700; 
-          text-transform: uppercase;
-          letter-spacing: 1px;
+          font-weight: 700;
           transition: 0.3s;
         }
-        .share-btn:hover { background: #c9b8ff; color: #000; border-color: #fff; }
+        .share-btn:hover { background: #c9b8ff; color: #000; }
 
-        /* ANA IZGARA: 4 Sütun (4x3 Tasarım) */
+        /* ANA IZGARA: 4 SÜTUN */
         .grid-months {
           display: grid; 
           grid-template-columns: repeat(4, 1fr); 
-          gap: 24px;
-          padding-bottom: 40px;
+          gap: 16px;
         }
 
-        @media (max-width: 1400px) { .grid-months { grid-template-columns: repeat(3, 1fr); } }
-        @media (max-width: 1000px) { .grid-months { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 600px) { .grid-months { grid-template-columns: 1fr; } }
+        @media (max-width: 1100px) { .grid-months { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 800px) { .grid-months { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 500px) { .grid-months { grid-template-columns: 1fr; } }
 
         .month-col {
-          background: rgba(22, 20, 31, 0.7); 
+          background: rgba(22, 20, 31, 0.8); 
           border: 1px solid #2a2835; 
-          border-radius: 24px;
-          padding: 20px; 
+          border-radius: 20px;
+          padding: 15px; 
           display: flex; 
           flex-direction: column;
-          min-height: 450px; /* Kutuları eşitlemek için */
-          transition: 0.3s ease;
+          min-height: 200px;
         }
-        .month-col:hover { border-color: #c9b8ff; background: rgba(22, 20, 31, 1); }
 
         .month-label {
           font-family: 'Bebas Neue', sans-serif; 
-          font-size: 2rem;
-          color: #fff; 
-          letter-spacing: 2px;
-          margin-bottom: 20px;
+          font-size: 1.6rem;
+          color: #c9b8ff; 
+          letter-spacing: 1.5px;
+          margin-bottom: 15px;
           text-align: center;
-          border-bottom: 2px solid #2a2835;
-          padding-bottom: 10px;
+          border-bottom: 1px solid #2a2835;
+          padding-bottom: 8px;
         }
 
-        /* OYUNLAR: Daha Büyük Kapaklar */
+        /* OYUNLARIN AY İÇİNDEKİ YERLEŞİMİ - 2'li Izgara */
         .games-grid {
           display: grid; 
-          grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); 
-          gap: 15px;
-          flex-grow: 1;
+          grid-template-columns: repeat(2, 1fr); /* AY İÇİNDE 2 OYUN YAN YANA */
+          gap: 10px;
         }
 
         .game-card {
           position: relative; 
           aspect-ratio: 3/4; 
-          border-radius: 12px;
+          border-radius: 8px;
           overflow: hidden; 
           background: #000;
-          box-shadow: 0 10px 25px rgba(0,0,0,0.6);
-          transition: transform 0.3s;
+          box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+          transition: transform 0.2s;
         }
         .game-card:hover { transform: scale(1.05); z-index: 10; }
         .game-card img { width: 100%; height: 100%; object-fit: cover; }
 
         .remove-btn {
-          position: absolute; top: 8px; right: 8px; width: 28px; height: 28px;
-          background: rgba(255, 77, 109, 0.95); border: none; border-radius: 50%;
-          color: white; font-size: 14px; cursor: pointer; opacity: 0;
+          position: absolute; top: 4px; right: 4px; width: 22px; height: 22px;
+          background: rgba(255, 77, 109, 0.9); border: none; border-radius: 50%;
+          color: white; font-size: 11px; cursor: pointer; opacity: 0;
           display: flex; align-items: center; justify-content: center;
-          transition: 0.2s; z-index: 20;
-          font-weight: bold;
+          transition: 0.2s; z-index: 10;
         }
         .game-card:hover .remove-btn { opacity: 1; }
 
         .add-btn {
           aspect-ratio: 3/4; 
-          border: 3px dashed #2a2835; 
-          border-radius: 12px;
+          border: 2px dashed #2a2835; 
+          border-radius: 8px;
           background: transparent; 
           color: #3d3a50; 
-          font-size: 3rem;
+          font-size: 2rem;
           cursor: pointer; 
           display: flex; align-items: center; justify-content: center;
           transition: 0.3s;
         }
-        .add-btn:hover { border-color: #c9b8ff; color: #c9b8ff; background: rgba(201, 184, 255, 0.05); }
+        .add-btn:hover { border-color: #c9b8ff; color: #c9b8ff; background: rgba(201, 184, 255, 0.03); }
 
         /* MODAL */
         .modal-backdrop {
           position: fixed; inset: 0; background: rgba(0,0,0,0.95);
           display: flex; align-items: center; justify-content: center; z-index: 100;
-          backdrop-filter: blur(15px);
+          backdrop-filter: blur(10px);
         }
         .modal {
-          background: #16141f; width: 95%; max-width: 700px;
-          border-radius: 30px; border: 1px solid #2a2835;
-          max-height: 85vh; display: flex; flex-direction: column;
+          background: #16141f; width: 95%; max-width: 600px;
+          border-radius: 24px; border: 1px solid #2a2835;
+          max-height: 80vh; display: flex; flex-direction: column;
           overflow: hidden;
         }
-        .modal-header { padding: 35px; border-bottom: 1px solid #2a2835; }
-        .search-results { flex: 1; overflow-y: auto; padding: 30px; }
-        .search-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-        .search-card { cursor: pointer; transition: 0.3s; position: relative; }
-        .search-card:hover { transform: scale(1.05); }
-        .search-card img { width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 15px; border: 2px solid transparent; }
+        .modal-header { padding: 25px; border-bottom: 1px solid #2a2835; }
+        .search-results { flex: 1; overflow-y: auto; padding: 20px; }
+        .search-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        .search-card { cursor: pointer; transition: 0.2s; text-align: center; }
+        .search-card img { width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 10px; border: 1px solid transparent; }
         .search-card:hover img { border-color: #c9b8ff; }
         .search-input {
           width: 100%; background: #0e0e12; border: 1px solid #2a2835;
-          padding: 20px; color: white; border-radius: 15px; outline: none; font-size: 1.2rem;
+          padding: 15px; color: white; border-radius: 12px; outline: none; font-size: 1.1rem;
         }
       `}</style>
 
@@ -296,7 +282,8 @@ export default function GameTracker() {
               <div className="games-grid">
                 {(monthGames[mi] || []).map((game) => (
                   <div key={game.id} className="game-card">
-                    <img src={game.coverUrl} alt={game.name} crossOrigin="anonymous" />
+                    {/* IGDB cover resmini daha kaliteli çekiyoruz */}
+                    <img src={game.coverUrl?.replace('t_thumb', 't_cover_big')} alt={game.name} crossOrigin="anonymous" />
                     <button 
                       className="remove-btn" 
                       data-html2canvas-ignore="true"
@@ -321,25 +308,24 @@ export default function GameTracker() {
         <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && setModal(null)}>
           <div className="modal">
             <div className="modal-header">
-                <div style={{ color: '#c9b8ff', fontSize: '1.5rem', fontWeight: '800', marginBottom: '20px', textAlign: 'center', fontFamily: 'Bebas Neue', letterSpacing: '2px' }}>
-                    {MONTHS[modal.monthIndex]} AYI İÇİN OYUN ARA
+                <div style={{ color: '#c9b8ff', fontSize: '1.2rem', fontWeight: '800', marginBottom: '20px', textAlign: 'center', fontFamily: 'Bebas Neue', letterSpacing: '1px' }}>
+                    {MONTHS[modal.monthIndex]} AYINA OYUN EKLE
                 </div>
-                <input className="search-input" placeholder="Oyunun adını yazın..." value={query} onChange={handleQueryChange} autoFocus />
+                <input className="search-input" placeholder="Oyun ara..." value={query} onChange={handleQueryChange} autoFocus />
             </div>
             
             <div className="search-results">
                 {searching ? (
-                    <div style={{ textAlign: 'center', color: '#c9b8ff', padding: '50px', letterSpacing: '2px' }}>ARANIYOR...</div>
+                    <div style={{ textAlign: 'center', color: '#c9b8ff', padding: '40px' }}>ARANIYOR...</div>
                 ) : (
                     <div className="search-grid">
                         {results.map((game) => {
-                            // En net kapak formatını kullan (t_cover_big_2x)
-                            const url = game.cover?.url?.replace('t_thumb', 't_cover_big_2x').replace(/^\/\//, 'https://');
+                            const url = game.cover?.url?.replace('t_thumb', 't_cover_big').replace(/^\/\//, 'https://');
                             return (
                                 <div key={game.id} className="search-card" onClick={() => addGame({ id: game.id, name: game.name, coverUrl: url })}>
                                     <img src={url} alt={game.name} />
-                                    <div style={{ fontSize: '12px', textAlign: 'center', color: '#fff', marginTop: '10px', fontWeight: '600', textTransform: 'uppercase' }}>
-                                        {game.name}
+                                    <div style={{ fontSize: '11px', textAlign: 'center', color: '#b8b4cc', marginTop: '8px', fontWeight: '600' }}>
+                                      {game.name}
                                     </div>
                                 </div>
                             );
